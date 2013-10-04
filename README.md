@@ -28,4 +28,10 @@
 2.  Run `more_features.R`!
 
 
+## `more_feature_selection.R`
+
+1.  Run `more_features.R`, so the features are stored in files.
+
+2.  Run `more_feature_selection.R`, to generate an interesting graph!
+
 
