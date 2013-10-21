@@ -19,9 +19,9 @@ parse.situation <- function(sit)
         loc.descriptor <- points.list[[1]]$descriptor
     }
 
-    return (data.frame(as.POSIXct(sit$situationRecord$situationRecordCreationTime),
-                       as.POSIXct(sit$situationRecord$validity$validityTimeSpecification[1]),
-                       as.POSIXct(sit$situationRecord$validity$validityTimeSpecification[2]),
+    return (data.frame(as.POSIXct(strptime(sit$situationRecord$situationRecordCreationTime, format="%Y-%m-%dT%H:%M:%S")),
+                       as.POSIXct(strptime(sit$situationRecord$validity$validityTimeSpecification[1], format="%Y-%m-%dT%H:%M:%S")),
+                       as.POSIXct(strptime(sit$situationRecord$validity$validityTimeSpecification[2], format="%Y-%m-%dT%H:%M:%S")),
                        sit$situationRecord$validity$validityStatus,
                        sit$situationRecord[[length(sit$situationRecord)]],
                        loc.descriptor,
