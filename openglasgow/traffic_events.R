@@ -51,4 +51,5 @@ map.img <- get_googlemap(center="Glasgow,UK", zoom=12, maptype="roadmap")
 colour <- mapply(function (s, e) { if (s < Sys.time() && Sys.time() < e) { "red" } else { "blue" }}, data[,2], data[,3], SIMPLIFY=TRUE)
 
 # Plot the map with traffic incidents on top
-ggmap(map.img) + geom_point(aes(x=longitude, y=latitude), data=data[,7:8], color=colour, size=5)
+print(ggmap(map.img) + geom_point(aes(x=longitude, y=latitude, shape=event, color=colour), data=cbind(data, colour), size=3) + scale_colour_identity())
+
