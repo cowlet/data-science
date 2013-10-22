@@ -3,6 +3,7 @@
 # http://data.glasgow.gov.uk/dataset/glasgow-road-network-traffic-events-feed
 
 library("RJSONIO")
+library("ggmap")
 
 # Parse a situationRecord for its interesting details
 parse.situation <- function(sit)
@@ -43,7 +44,11 @@ colnames(data) <- c("creation", "start", "end", "status", "event", "location", "
 # Store the parsed information
 write.table(data, file="traffic_events.csv", sep=",", row.names=FALSE)
 
-# Plot current events in red, past or future events in blue
-colour <- mapply(function (s, e) { if (s < Sys.time() && Sys.time() < e) { "red" } else { "blue" }}, data[,2], data[,3], SIMPLIFY=TRUE)
-plot(latitude ~ longitude, data, col=colour)
+# Grab a map of Glasgow image
+map.img <- get_googlemap(center="Glasgow,UK", zoom=12, maptype="roadmap")
 
+# Generate event colours: ongoing in red; past or future events in blue
+colour <- mapply(function (s, e) { if (s < Sys.time() && Sys.time() < e) { "red" } else { "blue" }}, data[,2], data[,3], SIMPLIFY=TRUE)
+
+# Plot the map with traffic incidents on top
+ggmap(map.img) + geom_point(aes(x=longitude, y=latitude), data=data[,7:8], color=colour, size=5)
