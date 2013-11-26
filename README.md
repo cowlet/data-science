@@ -28,10 +28,25 @@
 2.  Run `more_features.R`!
 
 
-## `more_feature_selection.R`
+## `feature_correlation.R`
 
 1.  Run `more_features.R`, so the features are stored in files.
 
-2.  Run `more_feature_selection.R`, to generate an interesting graph!
+2.  Run `feature_correlation.R`, to see features with high correlation.
+
+## `optimise.rb`
+
+1.  Run `feature_correlation.R` to output sets of features with high correlation.
+
+2.  Run `optimise.rb` to select the minimal set of uncorrelated features.
+
+
+## `feature_information.R`
+
+1.  Run `more_features.R`, so the features are stored in files.
+
+2.  If desired, modify line 25 of `feature_information.R` to include only the features you are interested in (e.g. after running `optimise.rb` and finding a different minimal set).
+
+3.  Run `feature_information.R` to generate an interesting graph!
 
 
