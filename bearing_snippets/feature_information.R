@@ -24,43 +24,43 @@ b4 <- cbind(b4, State=b4.labels)
 # I found offline analysis to give the following minimal set
 best <- c("Min.x", "Median.x", "Max.x", "Mean.x", "Skew.x", "Kurt.x", "FTF.x", "BPFI.x", "BPFO.x", "BSF.x", "F2.x", "F3.x", "F4.x", "F5.x", "Min.y", "Max.y", "Skew.y", "Kurt.y", "FTF.y", "BPFI.y", "BPFO.y", "BSF.y", "F2.y", "F3.y", "F4.y", "F5.y", "Qu.1.x", "VHF.pow.x", "Qu.1.y", "Median.y", "HF.pow.y")
 
-info <- "State"
-
 # Select all rows from all bearings, only the best feature cols plus State, and bind on bearing
 data <- rbind(
-  cbind(bearing="b1", (b1[,c(info, best)])),
-  cbind(bearing="b2", (b2[,c(info, best)])),
-  cbind(bearing="b3", (b3[,c(info, best)])),
-  cbind(bearing="b4", (b4[,c(info, best)]))
+  cbind(bearing="b1", (b1[,c("State", best)])),
+  cbind(bearing="b2", (b2[,c("State", best)])),
+  cbind(bearing="b3", (b3[,c("State", best)])),
+  cbind(bearing="b4", (b4[,c("State", best)]))
 )
 
 write.table(data, file=paste0(basedir, "../all_bearings.csv"), sep=",", row.names=FALSE)
 
 
-# Graph key features against each other to reveal patterns
+library("entropy")
+# MI = H(x) + H(y) - H(x, y)
+H.x <- entropy(table(data$State))
+mi <- apply(data[, -c(1, 2)], 2, function(col) { H.x + entropy(table(col)) - entropy(table(data$State, col))})
 
-# mark the state of the bearing with a point type
-pts <- do.call(rbind, Map(function(s)
-  {
-  	ifelse (s=="early", "e", 
-  	  ifelse(s == "normal", "n", 
-  	    ifelse(s == "suspect", "s", 
-  	      ifelse(s == "failure.b1", "1", 
-  	        ifelse(s == "failure.b2", "2", 
-  	          ifelse(s == "failure.inner", "i", 
-  	            ifelse(s == "failure.roller", "r",
-  	              ifelse(s == "stage2", "x", "u"))))))))
-  }, data$State))
-  
-# mark the bearing number with a colour
-colours <- do.call(rbind, Map(function(b) 
-  { 
-  	switch(b, b1 = "dodgerblue2", b2 = "darkorchid2", b3 = "coral2", b4 = "chartreuse")
-  }, data$bearing))
+# Now select the correct size of FV by testing different classifiers
+library("rpart")
+library("caret")
 
-# plot!
-plot(data$Skew.x ~ data$Kurt.x, col=colours, pch=pts)
-legend("topleft", c("bearing 1", "bearing 2", "bearing 3", "bearing 4"), col=c("dodgerblue2", "darkorchid2", "coral2", "chartreuse"), pch=c(1, 1, 1, 1))
+train.rows <- seq(1, length(data$State), by=4) # every fourth index
+sorted <- names(sort(mi, decreasing=TRUE))
+accuracies <- vector()
 
-# Instead of data$Skew.x and data$Kurt.x, swap in other features of interest
+for (i in 2:length(sorted))
+{
+	form <- paste0("data$State ~ data$", Reduce(function (r, name) { paste(r, paste0("data$", name), sep=" + ") }, sorted[1:i]))
+	model <- rpart(as.formula(form), data, subset=train.rows)
+	pred <- predict(model, data, type="class") # contains train and test set predictions	
+	cm <- confusionMatrix(pred[-train.rows], data[-train.rows, 2]) # only the non-training rows
+	# pull out the answer
+	accuracies <- c(accuracies, cm["overall"][[1]]["Accuracy"][[1]])
+}
+
+plot(accuracies, xlab="Number of features", ylab="Accuracy")
+
+# 14 features looks best. save those plus bearing and state labels
+write.table(data[c("bearing", "State", sorted[1:14])], file=paste0(basedir, "../all_bearings_best_fv.csv"), sep=",", row.names=FALSE)
+
 
